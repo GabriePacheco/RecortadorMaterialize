@@ -46,6 +46,20 @@ var gpRecortador  =  function (objeto, callback) {
 		var dim= getComputedStyle(recortador); 
 		canvas.width = dim.width.split("px")[0];
 		canvas.height = dim.width.split("px")[0];
+		console.log(canvas.width, canvas.height)
+		if (canvas.height > (screen.height*60/100)){
+			console.log("es muy grande");
+		
+		
+			
+			recortador.style.width = (dim.width.split("px")[0])/1.50 + "px";
+			recortador.style.margin = "auto auto";
+			canvas.width = recortador.style.width.split("px")[0];
+			canvas.height =recortador.style.width.split("px")[0];
+			console.log(canvas.width, canvas.height);
+			console.log(recortador.style.width, recortador.style.height);
+			
+		}
 		context.fillStyle=colorFondo;
 		context.fillRect(0,0, canvas.width, canvas.height);
 		var botonAddImage = document.getElementById("botonAddImage");
@@ -157,7 +171,9 @@ var gpRecortador  =  function (objeto, callback) {
 				if(typeof callback == 'function'){
 					callback({estado: true, recorte: imagenRecortada});	
 				}else{
-					console.log("IMAGEN RECORTADA: " )
+					if (callback){
+						document.getElementById(callback).innerHTML = "<img src='"+imagenRecortada.src +"' >";
+					}
 				}
 
 				
