@@ -9,6 +9,7 @@ var gpRecortador  =  function (objeto, callback) {
 	var pixelesMov = 5; 
 	var intervalo ;
 	var toqueX, toqueY;
+	var moviendo = false;
 	var botoneraRecortador = document.getElementById("botoneraRecortador");
 	var recortador =  document.getElementById("recortador");
 
@@ -46,20 +47,16 @@ var gpRecortador  =  function (objeto, callback) {
 		var dim= getComputedStyle(recortador); 
 		canvas.width = dim.width.split("px")[0];
 		canvas.height = dim.width.split("px")[0];
-		console.log(canvas.width, canvas.height)
+
 		if (canvas.height > (screen.height*60/100)){
-			console.log("es muy grande");
-		
-		
-			
 			recortador.style.width = (dim.width.split("px")[0])/1.50 + "px";
 			recortador.style.margin = "auto auto";
 			canvas.width = recortador.style.width.split("px")[0];
 			canvas.height =recortador.style.width.split("px")[0];
 			console.log(canvas.width, canvas.height);
 			console.log(recortador.style.width, recortador.style.height);
-			
 		}
+		
 		context.fillStyle=colorFondo;
 		context.fillRect(0,0, canvas.width, canvas.height);
 		var botonAddImage = document.getElementById("botonAddImage");
@@ -88,7 +85,7 @@ var gpRecortador  =  function (objeto, callback) {
 	    		canvas.addEventListener("touchmove", moverImagenTouch);
 	    		canvas.addEventListener("touchstart", initToque);
 	    		canvas.addEventListener("touchend", function (){var toqueX, toqueY; });
-
+	    		canvas.addEventListener("mousemove", mouseMoviendo, undefined);
 				var botonCutImage = document.getElementById('botonCutImage');
 				botonCutImage.className = botonCutImage.className.replace("hide", "");
 				recortador.className += " recortable";
@@ -121,23 +118,8 @@ var gpRecortador  =  function (objeto, callback) {
 	    }
 		var moverImagen = function (e){
 			e.preventDefault();
-			console.log("hi i am here ")
-			intervalo = setInterval(() => {
-		 		if (e.x > (canvas.width/2)){
-					movX+= +pixelesMov;
-				}
-				if (e.x < (canvas.width/2)){
-					movX += -pixelesMov;
-				}
-
-				if (e.y > (canvas.height/2)){
-					movY += +pixelesMov;
-				}
-				if (e.y < (canvas.height/2)){
-					movY += -pixelesMov;
-				}
-				dibujarImagen();
-			}, 200);
+			moviendo = true;
+	
 		}
 		var moverImagenTouch = function (e) {
 
@@ -161,15 +143,34 @@ var gpRecortador  =  function (objeto, callback) {
 			toqueY=e.changedTouches[0].clientY;	
 		}
 		var pararMovimiento = function (e){
-			clearInterval(intervalo);
+			moviendo = false;
 		}
+		var mouseMoviendo = function (e){
+			if (moviendo == true) {
+				console.log("moviendo ", e.movementX, e.movementY);
+				if (e.movementX > 0 ){
+						movX+= +pixelesMov;
+				}
+				if (e.movementX < 0 ){
+						movX+= -pixelesMov;
+				}
+				if (e.movementY > 0 ){
+						movY+= +pixelesMov;
+				}
+				if (e.movementY < 0 ){
+						movY+= -pixelesMov;
+				}
+				dibujarImagen();
+			}
+		} 
 		var cortarImagen = function (e){
 			imagenRecortada.src = canvas.toDataURL();
+			var file = dataURItoBlob(canvas.toDataURL());
 			imagenRecortada.onload =  function (){
 				botonCutImage.className +=" hide";
 				recortador.className = recortador.className.replace("recortable", "") ;
 				if(typeof callback == 'function'){
-					callback({estado: true, recorte: imagenRecortada});	
+					callback({estado: true, recorte: imagenRecortada, file:file});	
 				}else{
 					if (callback){
 						document.getElementById(callback).innerHTML = "<img src='"+imagenRecortada.src +"' >";
@@ -183,5 +184,23 @@ var gpRecortador  =  function (objeto, callback) {
 
 
 	}
+
+	function dataURItoBlob(dataURI) {
+		// convert base64/URLEncoded data component to raw binary data held in a string
+		var byteString;
+		if (dataURI.split(',')[0].indexOf('base64') >= 0)
+		    byteString = atob(dataURI.split(',')[1]);
+		else
+		    byteString = unescape(dataURI.split(',')[1]);
+		// separate out the mime component
+		var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+		// write the bytes of the string to a typed array
+		var ia = new Uint8Array(byteString.length);
+		for (var i = 0; i < byteString.length; i++) {
+		    ia[i] = byteString.charCodeAt(i);
+		}
+		return new Blob([ia], {type:mimeString});
+	}
+
 
 }
